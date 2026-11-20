@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Build / generated output
+dist/
+build/
+coverage/
+generated/
+*.log
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store

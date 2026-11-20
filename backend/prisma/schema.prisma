@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum InquiryStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+}
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  inquiries    Inquiry[]
+}
+
+model Inquiry {
+  id              String         @id @default(uuid())
+  customerName    String
+  customerContact String
+  subject         String
+  description     String
+  status          InquiryStatus  @default(NEW)
+  createdById     String
+  createdBy       User           @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([createdById])
+  @@index([status])
+}
