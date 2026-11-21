@@ -26,7 +26,22 @@ From `backend/`:
 4. Run `npm install`.
 5. Run `npx prisma migrate dev` then `npx prisma generate`.
 6. Optionally run `npm run db:check` to verify the database connection.
-7. Run `npm run dev` (or `npm start`).
-8. Open `http://localhost:5000/api/health`.
+7. Set `SESSION_SECRET` (at least 32 characters) in `.env`. Optionally set `SEED_STAFF_NAME`, `SEED_STAFF_EMAIL`, and `SEED_STAFF_PASSWORD`, then run `npm run db:seed` to create one local staff user. Do not commit `.env`.
+8. Run `npm test` to run authentication and inquiry API tests.
+9. Run `npm run dev` (or `npm start`).
+10. Open `http://localhost:5000/api/health`.
+
+Auth API (cookie session, HttpOnly):
+
+- `POST /api/auth/login` — `{ "email", "password" }`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+
+Inquiry API (authenticated; all staff can access all inquiries):
+
+- `POST /api/inquiries` — `{ "customerName", "customerContact", "subject", "description" }` only. Server sets status `NEW` and `createdById`. Extra properties including `status` or `createdById` are rejected.
+- `GET /api/inquiries` — optional `q` (customer name or subject) and `status`. Combined with AND. Newest first. No pagination.
+- `GET /api/inquiries/:id`
+- `PATCH /api/inquiries/:id/status` — `{ "status": "NEW" | "IN_PROGRESS" | "RESOLVED" }`
 
 Frontend setup will be added in a later phase.
