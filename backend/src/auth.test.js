@@ -114,6 +114,42 @@ describe('auth', () => {
     assert.equal(response.text, '');
   });
 
+  test('deleted staff session cannot call a protected API', async () => {
+    const deletedEmail = `cims-test-deleted-${randomUUID()}@example.com`;
+    const passwordHash = await bcrypt.hash(testPassword, 10);
+    const deletedUser = await prisma.user.create({
+      data: {
+        name: 'CIMS Deleted Staff',
+        email: deletedEmail,
+        passwordHash,
+      },
+    });
+
+    try {
+      const agent = request.agent(app);
+      const login = await agent
+        .post('/api/auth/login')
+        .send({ email: deletedEmail, password: testPassword });
+      assert.equal(login.status, 200);
+
+      await prisma.inquiry.deleteMany({ where: { createdById: deletedUser.id } });
+      await prisma.user.delete({ where: { id: deletedUser.id } });
+
+      const inquiries = await agent.get('/api/inquiries');
+      assert.equal(inquiries.status, 401);
+      assert.equal(inquiries.body.error, 'Unauthorized');
+      assertNoPasswordHash(inquiries.body);
+
+      const me = await agent.get('/api/auth/me');
+      assert.equal(me.status, 401);
+      assert.equal(me.body.error, 'Unauthorized');
+      assertNoPasswordHash(me.body);
+    } finally {
+      await prisma.inquiry.deleteMany({ where: { createdById: deletedUser.id } }).catch(() => {});
+      await prisma.user.delete({ where: { id: deletedUser.id } }).catch(() => {});
+    }
+  });
+
   test('login sets a session, /me persists, logout clears it', async () => {
     const agent = request.agent(app);
 
